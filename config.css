@@ -1,0 +1,59 @@
+body {
+    background-image: url('checkered_background.webp');
+    background-size: cover;
+}
+
+input {
+    outline: none;
+}
+
+#input-container {
+
+    position: absolute;
+    display: flex;
+    align-items: center;
+    column-gap: 5%;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+    font: 1.5vw Tahoma;
+    color: seashell;
+    white-space: nowrap;
+
+}
+
+#username {
+
+    background-color: black;
+    color: bisque;
+    text-align: center;
+    border-radius: 5px;
+}
+
+#error-message{
+    
+    visibility: hidden;
+    position: absolute;
+    left: 55%;
+    top: 100%;
+    color: indianred;
+}
+
+
+#save-button {
+    border: none;
+    cursor: pointer;
+}
+
+#save-button:active{
+    filter: brightness(0.8);
+}
+
+*:disabled {
+    background-color: green;
+    color: linen;
+}
+
+.username-error{
+    border-color: darkred;
+}

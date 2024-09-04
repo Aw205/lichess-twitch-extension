@@ -1,0 +1,65 @@
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+#eval-bar {
+
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+
+    background-color: rgb(25, 24, 24);
+    border-radius: 0.3rem;
+    font: 1vw 'Trebuchet MS', sans-serif;
+
+    width: 100%;
+    height: 100%;
+    color: white;
+}
+
+#inner-bar {
+
+    position: absolute;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: flex-start;
+    bottom: 0;
+    left: 0;
+
+    background-color: whitesmoke;
+    border-radius: 0 0 0.3rem 0.3rem;
+    height: 50%;
+    width: 100%;    
+    color: black;
+    transition: height 0.5s ease-in-out;
+
+}
+
+#drag-area{
+
+    position: absolute;
+    bottom: 2vh;
+    height: 100%;
+    width: 100%;
+    cursor: move;
+}
+
+.eval-flip {
+    transform: rotate(180deg);
+    span {
+        transform: rotate(-180deg);
+    }
+}
+
+#resize-container{
+    position: absolute;
+    width: 2%;
+    height: 80%;
+    resize: both;
+    overflow: hidden;
+}
