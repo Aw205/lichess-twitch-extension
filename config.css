@@ -1,6 +1,6 @@
-body {
-    background-image: url('checkered_background.webp');
-    background-size: cover;
+
+body{
+    background-color: rgb(24, 24, 27);
 }
 
 input {
@@ -17,7 +17,7 @@ input {
     left: 50%;
     transform: translateX(-50%);
     font: 1.5vw Tahoma;
-    color: seashell;
+    color: lightgray;
     white-space: nowrap;
 
 }
@@ -26,12 +26,13 @@ input {
 
     background-color: black;
     color: bisque;
+    font-size: 1.5vw;
     text-align: center;
     border-radius: 5px;
 }
 
-#error-message{
-    
+#error-message {
+
     visibility: hidden;
     position: absolute;
     left: 55%;
@@ -41,11 +42,13 @@ input {
 
 
 #save-button {
-    border: none;
+   
+    background-color: transparent;
+    color: lightgray;
     cursor: pointer;
 }
 
-#save-button:active{
+#save-button:active {
     filter: brightness(0.8);
 }
 
@@ -54,6 +57,39 @@ input {
     color: linen;
 }
 
-.username-error{
+.username-error {
     border-color: darkred;
+}
+
+#knight-logo {
+
+    color: dimgray;
+    font-size: 20vh;
+    position: absolute;
+    left: 0;
+    top:0;
+    z-index: 1;
+    background-color: rgb(24, 24, 27);
+    height: 20%;
+    transform: scale(-1, 1);
+}
+
+#config-border {
+
+    height: 80vh;
+    width: 90vw;
+    border: 3px ridge dimgray;
+    position: absolute;
+    left: 3vw;
+    top: 13vh;
+    border-radius: 1vw;
+}
+
+#follow-status {
+    color: dimgray;
+    font: 1.5vw Tahoma;
+    position: absolute;
+    left: 12vw;
+    top: 20vh;
+    border-radius: 1vw;
 }

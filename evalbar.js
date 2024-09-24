@@ -1,13 +1,13 @@
 
 let username = window.Twitch.ext.configuration.broadcaster?.content;
 let evalOrientation = "white";
+let isSearching = false;
 
 window.Twitch.ext.configuration.onChanged(() => {
     username = window.Twitch.ext.configuration.broadcaster?.content;
 });
 
 window.Twitch.ext.listen("broadcast", (target, contentType, message) => {
-
     if (username != message && gameStream) {
         gameStream.cancel(`Now following ${message}.`);
     }
@@ -18,13 +18,13 @@ const resizeContainer = document.getElementById("resize-container");
 const container = document.getElementById("eval-bar");
 const inner = document.getElementById("inner-bar");
 const dragArea = document.getElementById("drag-area");
+const stockfishWorker = new Worker('stockfish-16.1-asm.js');
 
 function onMouseDrag({ movementX, movementY }) {
 
     const style = window.getComputedStyle(resizeContainer);
     resizeContainer.style.left = `${parseInt(style.left) + movementX}px`;
     resizeContainer.style.top = `${parseInt(style.top) + movementY}px`;
-
 }
 dragArea.addEventListener("mousedown", () => {
     document.addEventListener("mousemove", onMouseDrag);
@@ -37,7 +37,7 @@ inner.addEventListener('eval-change', (event) => {
 
     inner.firstElementChild.textContent = '';
     if (event.detail.mate) {
-        if(event.detail.mate > 0){
+        if (event.detail.mate > 0) {
             inner.style.height = '100%';
             inner.firstElementChild.textContent = `M${event.detail.mate}`;
         }
@@ -63,6 +63,21 @@ container.addEventListener('eval-change', (event) => {
     }
 });
 
+stockfishWorker.onmessage = function (event) {
+
+    if (event.data.startsWith('bestmove')) {
+        isSearching = false;
+    }
+    else if (event.data.includes('seldepth') && event.data.substring(11, 13) > 19) {
+
+        let eval = parseInt(event.data.match('cp (-?[0-9]+)')?.[1]) / 100;
+        let mate = parseInt(event.data.match('mate (-?[0-9]+)')?.[1]);
+        inner.dispatchEvent(new CustomEvent('eval-change', { bubbles: true, detail: { eval: eval, mate: mate } }));
+    }
+};
+
+stockfishWorker.postMessage('uci');
+stockfishWorker.postMessage(`setoption name Threads value ${navigator.hardwareConcurrency}`);
 run();
 
 async function run() {
@@ -98,17 +113,22 @@ async function fetchGameStream() {
                 .then(readStream(response => {
 
                     if (response.status) {
-                        const playerColor = (response.players.white.user.name == username) ? "white" : "black";
+                        const playerColor = (response.players.white.user.name.toLowerCase() == username.toLowerCase()) ? "white" : "black";
                         if (playerColor != evalOrientation) {
                             evalOrientation = playerColor;
                             container.classList.toggle('eval-flip');
                         }
-                        fetchStockfishEval(response.fen);
+                        isSearching = true;
+                        stockfishWorker.postMessage('ucinewgame');
+                        stockfishWorker.postMessage(`position fen ${response.fen}`);
+                        stockfishWorker.postMessage('go depth 20');
                         startTurn = response.turns;
                         return;
                     }
-                    if (--startTurn < 0) {
-                        fetchStockfishEval(response.fen);
+                    if (--startTurn < 0 && !isSearching) {
+                            isSearching = true;
+                            stockfishWorker.postMessage(`position fen ${response.fen}`);
+                            stockfishWorker.postMessage('go depth 20');
                     }
                 }))
                 .catch(error => {
@@ -119,21 +139,3 @@ async function fetchGameStream() {
             console.error('Network or request error 1: ', error);
         });
 };
-
-function fetchStockfishEval(fen) {
-
-    const queryString = new URLSearchParams({ fen: fen, depth: 10 }).toString();
-    fetch(`https://stockfish.online/api/s/v2.php?${queryString}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            inner.dispatchEvent(new CustomEvent('eval-change', { bubbles: true, detail: { eval: data.evaluation, mate: data.mate } }));
-        })
-        .catch(error => {
-            console.error('An error occured: ', error);
-        });
-}

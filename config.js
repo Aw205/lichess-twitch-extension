@@ -2,9 +2,11 @@
 const saveButton = document.getElementById('save-button');
 const usernameInput = document.getElementById('username');
 const errorMessage = document.getElementById('error-message');
+const followStatus = document.getElementById('follow-status');
 
 window.Twitch.ext.configuration.onChanged(() => {
     usernameInput.value = window.Twitch.ext.configuration.broadcaster.content;
+    followStatus.textContent = `currently following: ${window.Twitch.ext.configuration.broadcaster.content}`;
 });
 
 saveButton.addEventListener('click', () => {
@@ -30,6 +32,8 @@ saveButton.addEventListener('click', () => {
 
             window.Twitch.ext.configuration.set("broadcaster", "0.01", username);
             window.Twitch.ext.send("broadcast", "application/json", username);
+
+            followStatus.textContent = `currently following: ${username}`;
 
             usernameInput.classList.remove("username-error");
             errorMessage.style.visibility = "hidden";
