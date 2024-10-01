@@ -1,6 +1,7 @@
 
 let username = window.Twitch.ext.configuration.broadcaster?.content;
 let evalOrientation = "white";
+let moveColor = 0;
 let isSearching = false;
 
 window.Twitch.ext.configuration.onChanged(() => {
@@ -18,6 +19,7 @@ const resizeContainer = document.getElementById("resize-container");
 const container = document.getElementById("eval-bar");
 const inner = document.getElementById("inner-bar");
 const dragArea = document.getElementById("drag-area");
+
 const stockfishWorker = new Worker('stockfish-16.1-asm.js');
 
 function onMouseDrag({ movementX, movementY }) {
@@ -32,7 +34,6 @@ dragArea.addEventListener("mousedown", () => {
 document.addEventListener("mouseup", () => {
     document.removeEventListener("mousemove", onMouseDrag);
 });
-
 inner.addEventListener('eval-change', (event) => {
 
     inner.firstElementChild.textContent = '';
@@ -50,7 +51,6 @@ inner.addEventListener('eval-change', (event) => {
     const newHeight = 5 + ((clampedScore + 4) / 8) * 90;
     inner.style.height = `${newHeight}%`;
 });
-
 container.addEventListener('eval-change', (event) => {
 
     container.firstElementChild.textContent = '';
@@ -68,16 +68,15 @@ stockfishWorker.onmessage = function (event) {
     if (event.data.startsWith('bestmove')) {
         isSearching = false;
     }
-    else if (event.data.includes('seldepth') && event.data.substring(11, 13) > 19) {
+    else if (event.data.includes('seldepth') && event.data.substring(11, 13) > 24) {
 
-        let eval = parseInt(event.data.match('cp (-?[0-9]+)')?.[1]) / 100;
-        let mate = parseInt(event.data.match('mate (-?[0-9]+)')?.[1]);
-        inner.dispatchEvent(new CustomEvent('eval-change', { bubbles: true, detail: { eval: eval, mate: mate } }));
+        let eval = parseInt(event.data.match(/cp (-?[0-9]+)/)?.[1]) / 100;
+        let mate = parseInt(event.data.match(/mate (-?[0-9]+)/)?.[1]);
+        inner.dispatchEvent(new CustomEvent('eval-change', { bubbles: true, detail: { eval: eval * moveColor, mate: mate } }));
     }
 };
 
 stockfishWorker.postMessage('uci');
-stockfishWorker.postMessage(`setoption name Threads value ${navigator.hardwareConcurrency}`);
 run();
 
 async function run() {
@@ -93,6 +92,7 @@ async function fetchGameStream() {
     if (username == undefined) {
         return;
     }
+
     const url = `https://lichess.org/api/users/status?ids=${username}&withGameIds=true`;
     await fetch(url)
         .then(response => {
@@ -119,16 +119,18 @@ async function fetchGameStream() {
                             container.classList.toggle('eval-flip');
                         }
                         isSearching = true;
+                        moveColor = (response.fen.match(/ [wb] /)[0] == " w ") ? 1 : -1;
                         stockfishWorker.postMessage('ucinewgame');
                         stockfishWorker.postMessage(`position fen ${response.fen}`);
-                        stockfishWorker.postMessage('go depth 20');
+                        stockfishWorker.postMessage('go depth 25');
                         startTurn = response.turns;
                         return;
                     }
-                    if (--startTurn < 0 && !isSearching) {
-                            isSearching = true;
-                            stockfishWorker.postMessage(`position fen ${response.fen}`);
-                            stockfishWorker.postMessage('go depth 20');
+                    if (startTurn-- < 0 && !isSearching) {
+                        isSearching = true;
+                        moveColor = (response.fen.match(/ [wb] /)[0] == " w ") ? 1 : -1;
+                        stockfishWorker.postMessage(`position fen ${response.fen}`);
+                        stockfishWorker.postMessage('go depth 25');
                     }
                 }))
                 .catch(error => {

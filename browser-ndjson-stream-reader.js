@@ -1,4 +1,4 @@
-/* FOR THE BROWSER
+/* 
 Utility function to read a ND-JSON HTTP stream.
 `processLine` is a function taking a JSON object. It will be called with each element of the stream.
 `response` is the result of a `fetch` request.
